@@ -1,42 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>South Africa Income Tax Calculator 2025/26 — SARS & UIF | Tabutility</title>
+  <meta name="description" content="Calculate your South African take-home pay for 2025/26. Includes SARS income tax, primary rebate and UIF contribution. Instant ZAR results." />
+  <meta name="keywords" content="south africa income tax calculator, sars tax calculator, south africa salary calculator 2025, uif calculator, zar take home pay" />
+  <link rel="canonical" href="https://south-africa-income-tax.tabutility.com/" />
+  <meta property="og:title" content="South Africa Income Tax Calculator 2025/26 — SARS & UIF" />
+  <meta property="og:description" content="Calculate South African take-home pay including SARS income tax and UIF for 2025/26." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇿🇦</text></svg>" />
+  <meta name="robots" content="index, follow" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7039091592734005" crossorigin="anonymous"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-78VZWJ5B1W"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-78VZWJ5B1W');</script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body style="margin:0;background:#f8faff;font-family:'Segoe UI',Arial,sans-serif">
+<div id="root"></div>
+<script type="text/babel">
+//<![CDATA[
+const { useState } = React;
 
-    <!-- ✏️ UPDATE THESE FOR EVERY NEW TOOL -->
-    <title>TOOL NAME — TOOL TAGLINE | Tabutility</title>
-    <meta name="description" content="TOOL DESCRIPTION. No sign-up, runs in your browser." />
-    <meta name="keywords" content="KEYWORD 1, KEYWORD 2, KEYWORD 3, free TOOL NAME" />
-    <link rel="canonical" href="https://SUBDOMAIN.tabutility.com/" />
-    <meta property="og:url" content="https://SUBDOMAIN.tabutility.com/" />
-    <meta property="og:title" content="TOOL NAME — TOOL TAGLINE" />
-    <meta property="og:description" content="TOOL DESCRIPTION. Free, no sign-up." />
-    <meta name="twitter:title" content="TOOL NAME — TOOL TAGLINE" />
-    <meta name="twitter:description" content="TOOL DESCRIPTION. Free, no sign-up." />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>EMOJI</text></svg>" />
-    <!-- ✏️ END OF SECTION TO UPDATE -->
+const SA_BANDS = [
+  { limit: 237100,   rate: 0.18, base: 0 },
+  { limit: 370500,   rate: 0.26, base: 42678 },
+  { limit: 512800,   rate: 0.31, base: 77362 },
+  { limit: 673000,   rate: 0.36, base: 121475 },
+  { limit: 857900,   rate: 0.39, base: 179147 },
+  { limit: 1817000,  rate: 0.41, base: 251258 },
+  { limit: Infinity, rate: 0.45, base: 644489 },
+];
 
-    <!-- DO NOT CHANGE ANYTHING BELOW THIS LINE -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Tabutility" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="robots" content="index, follow" />
+function calcSATax(income) {
+  for (let i = 0; i < SA_BANDS.length; i++) {
+    const b = SA_BANDS[i];
+    const prev = i === 0 ? 0 : SA_BANDS[i-1].limit;
+    if (income <= b.limit) {
+      return b.base + (income - prev) * b.rate;
+    }
+  }
+  return 0;
+}
 
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7039091592734005" crossorigin="anonymous"></script>
+function calcSA(gross, age) {
+  const grossTax = calcSATax(gross);
+  // Rebates 2025/26
+  const primaryRebate = 17235;
+  const secondaryRebate = age >= 65 ? 9444 : 0;
+  const tertiaryRebate = age >= 75 ? 3145 : 0;
+  const totalRebate = primaryRebate + secondaryRebate + tertiaryRebate;
+  const incomeTax = Math.max(0, grossTax - totalRebate);
+  // UIF: 1% employee, capped at R17,712/month
+  const uifBase = Math.min(gross, 17712 * 12);
+  const uif = uifBase * 0.01;
+  const total = incomeTax + uif;
+  const takeHome = gross - total;
+  return { grossTax, incomeTax, uif, total, takeHome, totalRebate };
+}
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-78VZWJ5B1W"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-78VZWJ5B1W');
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+function fmt(n) { return 'R' + Math.round(n).toLocaleString('en-ZA'); }
+function pct(n, gross) { return gross > 0 ? (n / gross * 100).toFixed(1) + '%' : '0%'; }
+
+function Row({ label, value, gross, highlight, credit }) {
+  return (
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #f0f0f0'}}>
+      <span style={{fontSize:14,color:highlight?'#1a1a2e':credit?'#16a34a':'#6b7280',fontWeight:highlight?700:400}}>{label}</span>
+      <div style={{textAlign:'right'}}>
+        <span style={{fontSize:15,fontWeight:700,color:highlight?'#16a34a':credit?'#16a34a':'#1a1a2e'}}>{credit?'−':''}{fmt(value)}</span>
+        <span style={{fontSize:12,color:'#9ca3af',marginLeft:8}}>{pct(value,gross)}</span>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [gross, setGross] = useState(500000);
+  const [age, setAge] = useState('under65');
+
+  const ageNum = age === 'under65' ? 40 : age === '65_74' ? 68 : 77;
+  const r = calcSA(Number(gross) || 0, ageNum);
+  const g = Number(gross) || 0;
+
+  return (
+    <div style={{maxWidth:520,margin:'0 auto',padding:'0 0 40px'}}>
+      <div style={{background:'#1a1a2e',padding:'12px 20px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <a href="https://tabutility.com" style={{color:'#a5b4fc',textDecoration:'none',fontSize:14}}>← All Tools</a>
+        <span style={{color:'#fff',fontWeight:700,fontSize:15}}>⚡ Tabutility</span>
+      </div>
+
+      <div style={{background:'linear-gradient(135deg,#16a34a,#15803d)',padding:'28px 20px',textAlign:'center',color:'#fff'}}>
+        <div style={{fontSize:36,marginBottom:8}}>🇿🇦</div>
+        <h1 style={{margin:'0 0 6px',fontSize:22,fontWeight:900}}>South Africa Income Tax Calculator</h1>
+        <p style={{margin:0,fontSize:13,opacity:0.85}}>SARS · Primary Rebate · UIF — 2025/26</p>
+      </div>
+
+      <div style={{padding:'20px'}}>
+        <div style={{background:'#fff',borderRadius:14,padding:'20px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)',marginBottom:16}}>
+          <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Annual Gross Income (ZAR)</label>
+          <div style={{position:'relative'}}>
+            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#6b7280',fontWeight:700}}>R</span>
+            <input type="number" value={gross} onChange={e=>setGross(e.target.value)}
+              style={{width:'100%',padding:'11px 12px 11px 28px',borderRadius:10,border:'2px solid #e5e7eb',fontSize:16,boxSizing:'border-box',outline:'none'}} />
+          </div>
+
+          <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',margin:'14px 0 6px'}}>Age</label>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {[['under65','Below 65'],['65_74','65 – 74'],['75plus','75 & above']].map(([v,l])=>(
+              <button key={v} onClick={()=>setAge(v)}
+                style={{flex:1,padding:'9px 8px',borderRadius:10,border:`2px solid ${age===v?'#16a34a':'#e5e7eb'}`,background:age===v?'#16a34a':'#fff',color:age===v?'#fff':'#374151',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{background:'#fff',borderRadius:14,padding:'20px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)',marginBottom:16}}>
+          <div style={{fontSize:13,fontWeight:700,color:'#6b7280',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5}}>Take-Home Pay</div>
+          <div style={{fontSize:36,fontWeight:900,color:'#16a34a',marginBottom:4}}>{fmt(r.takeHome)}</div>
+          <div style={{fontSize:13,color:'#9ca3af'}}>per year &nbsp;·&nbsp; {fmt(r.takeHome/12)} / month</div>
+        </div>
+
+        <div style={{background:'#fff',borderRadius:14,padding:'20px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
+          <div style={{fontSize:13,fontWeight:700,color:'#374151',marginBottom:8}}>Breakdown</div>
+          <Row label="Gross Income" value={g} gross={g} />
+          <Row label="Gross Tax (before rebate)" value={r.grossTax} gross={g} />
+          <Row label="Primary Rebate" value={r.totalRebate} gross={g} credit />
+          <Row label="Income Tax (after rebate)" value={r.incomeTax} gross={g} />
+          <Row label="UIF (1%)" value={r.uif} gross={g} />
+          <Row label="Total Deductions" value={r.total} gross={g} />
+          <Row label="Net Take-Home" value={r.takeHome} gross={g} highlight />
+        </div>
+
+        <div style={{background:'#f0fdf4',borderRadius:12,padding:'16px',marginTop:16,fontSize:13,color:'#15803d',lineHeight:1.6}}>
+          <strong>2025/26 rates:</strong> 18% to R237,100 · 26% to R370,500 · 31% to R512,800 · 36% to R673,000 · 39% to R857,900 · 41% to R1,817,000 · 45% above. Primary rebate R17,235 · Secondary (65+) R9,444 · Tertiary (75+) R3,145. UIF 1% capped at R17,712/month.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+//]]>
+</script>
+</body>
 </html>
