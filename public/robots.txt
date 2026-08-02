@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://south-africa-income-tax.tabutility.com/sitemap.xml
